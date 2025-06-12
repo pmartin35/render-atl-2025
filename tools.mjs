@@ -4,6 +4,7 @@
  * @property {(args: unknown) => Promise<string>} handler - The function that handles the tool call
  */
 
+import { readFile } from "node:fs/promises";
 import { addIssueComment, closeIssue } from "./github.mjs";
 
 const log = async (message) => {
@@ -64,6 +65,38 @@ export const toolDefinitions = [
       await log(`✅ ${comment}`);
       await closeIssue();
       return "";
+    },
+  },
+  {
+    definition: {
+      type: "function",
+      name: "read_file",
+      description:
+        "Read a file from the repository. This will return the contents of the file as a string.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description:
+              "The path to the file to read. This should be relative to the root of the repository.",
+          },
+        },
+        required: ["path"],
+        additionalProperties: false,
+      },
+      strict: true,
+    },
+    /** @param {{ path: string }} args */
+    handler: async ({ path }) => {
+      await log(`👀 Reading file: ${path}`);
+      try {
+        const contents = await readFile(path, "utf8");
+        return contents;
+      } catch (error) {
+        await log(`❌ Error reading file: ${error.message}`);
+        return "";
+      }
     },
   },
 ];
