@@ -95,7 +95,7 @@ export const toolDefinitions = [
         return contents;
       } catch (error) {
         await log(`❌ Error reading file: ${error.message}`);
-        return "";
+        return "Failed to read file";
       }
     },
   },
@@ -128,10 +128,53 @@ export const toolDefinitions = [
       await log(`✏️ Writing file: ${path}`);
       try {
         await writeFile(path, contents);
-        return "";
+        return "File created successfully";
       } catch (error) {
         await log(`❌ Error writing file: ${error.message}`);
-        return "";
+        return "Failed to create file";
+      }
+    },
+  },
+  {
+    definition: {
+      type: "function",
+      name: "update_file",
+      description: "Make a change to an existing file in the repository.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description:
+              "The path to the file to update. This should be relative to the root of the repository.",
+          },
+          old_string: {
+            type: "string",
+            description:
+              "The string to replace. This should be an EXACT string already in the file.",
+          },
+          new_string: {
+            type: "string",
+            description: "The string to replace it with.",
+          },
+        },
+        required: ["path", "old_string", "new_string"],
+        additionalProperties: false,
+      },
+      strict: true,
+    },
+    /** @param {{ path: string, old_string: string, new_string: string }} args */
+    handler: async ({ path, old_string, new_string }) => {
+      await log(`🖊️ Updating file: ${path}`);
+      try {
+        const contents = await readFile(path, "utf8");
+        const newContents = contents.replace(old_string, new_string);
+        await writeFile(path, newContents);
+        await log(`✅ Updated file: ${path}`);
+        return "File updated successfully";
+      } catch (error) {
+        await log(`❌ Error updating file: ${error.message}`);
+        return "Failed to update file";
       }
     },
   },
