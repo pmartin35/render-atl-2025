@@ -4,7 +4,7 @@
  * @property {(args: unknown) => Promise<string>} handler - The function that handles the tool call
  */
 
-import { readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { addIssueComment, closeIssue } from "./github.mjs";
 
 const log = async (message) => {
@@ -65,6 +65,38 @@ export const toolDefinitions = [
       await log(`✅ ${comment}`);
       await closeIssue();
       return "";
+    },
+  },
+  {
+    definition: {
+      type: "function",
+      name: "list_files",
+      description:
+        "List all files in the repository. This will return a list of file paths relative to the root of the repository.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description:
+              "The path to the directory to list. This should be relative to the root of the repository.",
+          },
+        },
+        required: ["path"],
+        additionalProperties: false,
+      },
+      strict: true,
+    },
+    /** @param {{ path: string }} args */
+    handler: async ({ path }) => {
+      await log(`👀 Listing files in: ${path}`);
+      try {
+        const files = await readdir(path);
+        return files.join("\n");
+      } catch (error) {
+        await log(`❌ Error reading file: ${error.message}`);
+        return "Failed to read file";
+      }
     },
   },
   {

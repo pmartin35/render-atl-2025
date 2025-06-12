@@ -4,7 +4,10 @@ import { systemPrompt } from "./prompt.mjs";
 import { toolDefinitions } from "./tools.mjs";
 const openai = new OpenAI();
 
-const tools = toolDefinitions.map((tool) => tool.definition);
+const tools = [
+  ...toolDefinitions.map((tool) => tool.definition),
+  { type: "web_search_preview" },
+];
 
 async function loop() {
   const input = [
