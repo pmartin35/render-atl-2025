@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { getIssueAsMarkdown } from "./github.mjs";
 import { toolDefinitions } from "./tools.mjs";
 const openai = new OpenAI();
 
@@ -11,7 +12,7 @@ async function loop() {
       content:
         "You are a helpful assistant. First, think step by step using the tool think and then use the tool to complete the task.",
     },
-    { role: "user", content: "What is the capital of Georgia US?" },
+    { role: "user", content: await getIssueAsMarkdown() },
   ];
 
   while (true) {
