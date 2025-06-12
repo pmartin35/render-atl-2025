@@ -4,7 +4,7 @@
  * @property {(args: unknown) => Promise<string>} handler - The function that handles the tool call
  */
 
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { addIssueComment, closeIssue } from "./github.mjs";
 
 const log = async (message) => {
@@ -95,6 +95,42 @@ export const toolDefinitions = [
         return contents;
       } catch (error) {
         await log(`❌ Error reading file: ${error.message}`);
+        return "";
+      }
+    },
+  },
+  {
+    definition: {
+      type: "function",
+      name: "write_file",
+      description:
+        "Create a new file in the repository. This will create the file with the given contents. If the file already exists, it will be overwritten.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description:
+              "The path to the file to create. This should be relative to the root of the repository.",
+          },
+          contents: {
+            type: "string",
+            description: "The contents of the file to create.",
+          },
+        },
+        required: ["path", "contents"],
+        additionalProperties: false,
+      },
+      strict: true,
+    },
+    /** @param {{ path: string, contents: string }} args */
+    handler: async ({ path, contents }) => {
+      await log(`✏️ Writing file: ${path}`);
+      try {
+        await writeFile(path, contents);
+        return "";
+      } catch (error) {
+        await log(`❌ Error writing file: ${error.message}`);
         return "";
       }
     },
