@@ -4,7 +4,7 @@
  * @property {(args: unknown) => Promise<string>} handler - The function that handles the tool call
  */
 
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile, unlink } from "node:fs/promises";
 import { addIssueComment, closeIssue } from "./github.mjs";
 
 const log = async (message) => {
@@ -207,6 +207,36 @@ export const toolDefinitions = [
       } catch (error) {
         await log(`❌ Error updating file: ${error.message}`);
         return "Failed to update file";
+      }
+    },
+  },
+  {
+    definition: {
+      type: "function",
+      name: "delete_file",
+      description: "Delete a file from the repository.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path to the file to delete. This should be relative to the root of the repository.",
+          },
+        },
+        required: ["path"],
+        additionalProperties: false,
+      },
+      strict: true,
+    },
+    /** @param {{ path: string }} args */
+    handler: async ({ path }) => {
+      await log(`🗑️ Deleting file: ${path}`);
+      try {
+        await unlink(path);
+        return "File deleted successfully";
+      } catch (error) {
+        await log(`❌ Error deleting file: ${error.message}`);
+        return "Failed to delete file";
       }
     },
   },
